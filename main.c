@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 
 #include "font8x8_basic.h"
@@ -38,6 +39,16 @@ void DrawChar(screen *Screen, int X, int Y, char Character)
     }
 }
 
+void DrawString(screen *Screen, int X, int Y, char *String)
+{
+    while(*String)
+    {
+        DrawChar(Screen, X, Y, *String);
+        X += 8;
+        *String++;
+    }
+}
+
 int main(int argc, char **argv)
 {
     int ScreenWidth = 1024;
@@ -56,6 +67,11 @@ int main(int argc, char **argv)
     Screen.Pitch = ScreenSurface->pitch;
     Screen.Pixels = ScreenSurface->pixels;
 
+    char TextBuffer[256] = {0};
+    int Cursor = 0;
+
+    SDL_StartTextInput();
+
     int Running = 1;
     while(Running)
     {
@@ -67,6 +83,14 @@ int main(int argc, char **argv)
                 Running = 0;
                 break;
             }
+            if(Event.type == SDL_TEXTINPUT)
+            {
+                int Length = strlen(Event.text.text);
+                for(int Index = 0; Index < Length; ++Index, ++Cursor)
+                {
+                    TextBuffer[Cursor] = Event.text.text[Index];
+                }
+            }
         }
 
         // Clear Screen
@@ -74,10 +98,10 @@ int main(int argc, char **argv)
         for(int y = 0; y < 576; ++y)
         {
             for(int x = 0; x < 1024; ++x)
-                DrawPixel(&Screen, x, y, RGBA2BGRA(255, 150, 0, 0)); //BGRA
+                DrawPixel(&Screen, x, y, RGBA2BGRA(150, 150, 150, 0)); //BGRA
         }
 
-        DrawChar(&Screen, 100, 100, 'A');
+        DrawString(&Screen, 0, 0, TextBuffer);
 
         SDL_UnlockSurface(ScreenSurface);
 
