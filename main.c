@@ -2,15 +2,23 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 
+typedef struct screen
+{
+    uint32_t *Pixels;
+    int Pitch;
+    int Width;
+    int Height;
+} screen;
+
 uint32_t RGBA2BGRA(uint8_t Red, uint8_t Green, uint8_t Blue, uint8_t Alpha)
 {
     return (Alpha << 24)|(Red << 16)|(Green << 8)|Blue;    
 }
 
-void DrawPixel(uint32_t *Screen, int ScreenWidth, int ScreenHeight, int X, int Y, uint32_t Color)
+void DrawPixel(screen *Screen, int X, int Y, uint32_t Color)
 {
-    if(X >= 0 && X < ScreenWidth && Y >= 0 && Y < ScreenHeight)
-        Screen[Y * ScreenWidth + X] = Color;
+    if(X >= 0 && X < Screen->Width && Y >= 0 && Y < Screen->Height)
+        Screen->Pixels[Y * (Screen->Pitch / 4) + X] = Color;
 }
 
 int main(int argc, char **argv)
@@ -25,6 +33,12 @@ int main(int argc, char **argv)
 
     SDL_Surface *ScreenSurface = SDL_GetWindowSurface(Window);
     
+    screen Screen = {0};
+    Screen.Width = ScreenWidth;
+    Screen.Height = ScreenHeight;
+    Screen.Pitch = ScreenSurface->pitch;
+    Screen.Pixels = ScreenSurface->pixels;
+
     int Running = 1;
     while(Running)
     {
@@ -43,7 +57,7 @@ int main(int argc, char **argv)
         for(int y = 0; y < 576; ++y)
         {
             for(int x = 0; x < 1024; ++x)
-                DrawPixel(ScreenSurface->pixels, ScreenWidth, ScreenHeight, x, y, RGBA2BGRA(255, 150, 0, 0)); //BGRA
+                DrawPixel(&Screen, x, y, RGBA2BGRA(255, 150, 0, 0)); //BGRA
         }
         SDL_UnlockSurface(ScreenSurface);
 
