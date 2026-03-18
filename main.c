@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 
+#include "font8x8_basic.h"
+
 typedef struct screen
 {
     uint32_t *Pixels;
@@ -19,6 +21,21 @@ void DrawPixel(screen *Screen, int X, int Y, uint32_t Color)
 {
     if(X >= 0 && X < Screen->Width && Y >= 0 && Y < Screen->Height)
         Screen->Pixels[Y * (Screen->Pitch / 4) + X] = Color;
+}
+
+void DrawChar(screen *Screen, int X, int Y, char Character)
+{
+    for(int Row = 0; Row < 8; ++Row)
+    {
+        for(int Col = 0; Col < 8; ++Col)
+        {
+            uint32_t Pixel = (font8x8_basic[Character][Row] >> Col) & 1;
+            if(Pixel)
+            {
+                DrawPixel(Screen, Col + X, Row + Y, RGBA2BGRA(255, 255, 255, 255));
+            }
+        }
+    }
 }
 
 int main(int argc, char **argv)
@@ -59,6 +76,9 @@ int main(int argc, char **argv)
             for(int x = 0; x < 1024; ++x)
                 DrawPixel(&Screen, x, y, RGBA2BGRA(255, 150, 0, 0)); //BGRA
         }
+
+        DrawChar(&Screen, 100, 100, 'A');
+
         SDL_UnlockSurface(ScreenSurface);
 
         
