@@ -6,6 +6,28 @@
 #include "font8x8_basic.h"
 #include "render.c"
 
+void OpenFile(char **Buffer, char *File)
+{
+    // TODO: special chars with binary
+    FILE *Handle = fopen(File, "r");
+    if(!Handle)
+    {
+        printf("File not open!\n");
+        return;
+    }
+    fseek(File, 0, SEEK_END);
+    size_t Filesize = ftell(File);
+    rewind(File);
+
+
+    fclose(File);
+}
+
+void WriteFile(char *File)
+{
+
+}
+
 int main(int argc, char **argv)
 {
     int ScreenWidth = 1024;
@@ -85,7 +107,7 @@ int main(int argc, char **argv)
                         // Go up only if it's not first
                         if(Cursor[1] != 0)
                         --Cursor[1];
-                        
+
                         int StringLength = strlen(TextBuffer[Cursor[1]]);
                         Cursor[0] = StringLength;
                     }
