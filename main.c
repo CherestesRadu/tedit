@@ -45,7 +45,7 @@ void DrawString(screen *Screen, int X, int Y, char *String)
     {
         DrawChar(Screen, X, Y, *String);
         X += 8;
-        *String++;
+        String++;
     }
 }
 
