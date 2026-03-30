@@ -28,6 +28,69 @@ void WriteFile(char *File)
 
 }
 
+#define MAX_LINES 1024
+#define MAX_CHARS 256
+
+typedef struct text_buffer
+{
+    char Lines[MAX_LINES][MAX_CHARS];
+    int Cursor[2];
+} text_buffer;
+
+void SwapLines(text_buffer *Buffer, int Line0, int Line1)
+{
+
+}
+
+void HandleNewLine(text_buffer *Buffer)
+{
+    // Take everything from the rightside and put it on the next line
+    
+    if(Buffer->Cursor[1] < MAX_LINES - 1)
+    {
+        char *Target = Buffer->Lines[Buffer->Cursor[1] + 1];
+        int CharsLeft = MAX_CHARS - Buffer->Cursor[0];
+        memcpy(Target, Buffer->Lines[Buffer->Cursor[1]] + Buffer->Cursor[0], CharsLeft);
+        memset(Buffer->Lines[Buffer->Cursor[1]] + Buffer->Cursor[0], 0, CharsLeft);
+        Buffer->Cursor[0] = 0;
+        ++Buffer->Cursor[1];
+    }
+    else
+    {
+        // TODO: Grow buffer
+    }
+}
+
+void HandleBackspace(text_buffer *Buffer)
+{
+
+}
+
+void HandleUpArrow(text_buffer *Buffer)
+{
+    if(Buffer->Cursor[1] > 0)
+        --Buffer->Cursor[1];
+}
+
+void HandleDownArrow(text_buffer *Buffer)
+{
+    if(Buffer->Cursor[1] < MAX_LINES - 1)
+        ++Buffer->Cursor[1];
+}
+
+void HandleLeftArrow(text_buffer *Buffer)
+{
+    if(Buffer->Cursor[0] > 0)
+        --Buffer->Cursor[0];
+}
+
+void HandleRightArrow(text_buffer *Buffer)
+{
+    if(Buffer->Cursor[0] < MAX_CHARS - 1)
+        ++Buffer->Cursor[0];
+}
+
+
 int main(int argc, char **argv)
 {
     int ScreenWidth = 1024;
@@ -49,10 +112,9 @@ int main(int argc, char **argv)
     const int MaxLines = 1024;
     const int MaxChars = 256;
 
-    char TextBuffer[MaxLines][MaxChars];
-    memset(TextBuffer, 0, MaxLines * MaxChars);
-    int Cursor[2] = {0};
 
+    text_buffer TextBuffer = {0};
+    
     SDL_StartTextInput();
 
     int Running = 1;
@@ -80,12 +142,26 @@ int main(int argc, char **argv)
             if(Event.type == SDL_TEXTINPUT)
             {
                 int Length = strlen(Event.text.text);
-                for(int Index = 0; Index < Length && Cursor[0] < MaxChars; ++Index, ++Cursor[0])
+                for(int Index = 0; Index < Length && TextBuffer.Cursor[0] < MaxChars; ++Index, ++TextBuffer.Cursor[0])
                 {
-                    TextBuffer[Cursor[1]][Cursor[0]] = Event.text.text[Index];
+                    TextBuffer.Lines[TextBuffer.Cursor[1]][TextBuffer.Cursor[0]] = Event.text.text[Index];
                 }
             }
 
+            if(Event.type == SDL_KEYDOWN)
+            {
+                switch(Event.key.keysym.sym)
+                {
+                    case SDLK_RETURN: { HandleNewLine(&TextBuffer); } break;
+                    case SDLK_BACKSPACE: { } break;
+                    case SDLK_UP: { HandleUpArrow(&TextBuffer); } break;
+                    case SDLK_DOWN: { HandleDownArrow(&TextBuffer); } break;
+                    case SDLK_LEFT: { HandleLeftArrow(&TextBuffer); } break;
+                    case SDLK_RIGHT: { HandleRightArrow(&TextBuffer); } break;
+                }
+            }
+
+#if 0
             if(Event.type == SDL_KEYDOWN)
             {
                 if(Event.key.keysym.sym == SDLK_RETURN)
@@ -119,6 +195,7 @@ int main(int argc, char **argv)
                     }
                 }
             }
+#endif
         }
 
         // Clear Screen
@@ -135,8 +212,8 @@ int main(int argc, char **argv)
             {
                 for(int X = 0; X < 8 * FontScale; ++X)
                 {
-                    int PX = Cursor[0] * 8 * FontScale + X;
-                    int PY = Cursor[1] * 8 * FontScale + Y;
+                    int PX = TextBuffer.Cursor[0] * 8 * FontScale + X;
+                    int PY = TextBuffer.Cursor[1] * 8 * FontScale + Y;
                     DrawPixel(&Screen, PX, PY, 0xffffffff);
                 }
             }
@@ -144,7 +221,7 @@ int main(int argc, char **argv)
 
         for(int Line = 0; Line < MaxLines; ++Line)
         {
-            DrawString(&Screen, 0, Line * 8 * FontScale, TextBuffer[Line]);
+            DrawString(&Screen, 0, Line * 8 * FontScale, TextBuffer.Lines[Line]);
         }
         SDL_UnlockSurface(ScreenSurface);
 
@@ -152,7 +229,7 @@ int main(int argc, char **argv)
 
         SDL_UpdateWindowSurface(Window);
         SDL_Delay(10);
-        printf("Cursor Position: %d %d\n", Cursor[0], Cursor[1]);
+        printf("Cursor Position: %d %d\n", TextBuffer.Cursor[0], TextBuffer.Cursor[1]);
 
 
     }
